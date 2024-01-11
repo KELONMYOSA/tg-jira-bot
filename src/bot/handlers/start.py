@@ -1,7 +1,8 @@
+from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
 
-def run(bot):
+def run(bot: AsyncTeleBot):
     @bot.message_handler(commands=["start"])
     async def start_bot(message: Message):
         await bot.send_message(
@@ -15,3 +16,5 @@ def run(bot):
 Но для начала необходимо авторизоваться:
             """,
         )
+        await bot.send_message(message.chat.id, "Введите логин:")
+        await bot.set_state(message.from_user.id, "jira_user", message.chat.id)

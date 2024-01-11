@@ -1,0 +1,41 @@
+from jira import JIRA
+from telebot.types import Message
+
+from src.bot.app import bot
+from src.config import settings
+
+
+async def get_jira_user(message: Message):
+    jira_user = message.text.strip()
+    await bot.delete_message(message.chat.id, message.id)
+    await bot.send_message(message.chat.id, "********")
+    await bot.send_message(message.chat.id, "Введите пароль:")
+    await bot.set_state(message.from_user.id, f"jira_pass_{jira_user}", message.chat.id)
+
+
+async def get_jira_pass(message: Message, jira_user: str):
+    jira_pass = message.text.strip()
+    await bot.delete_message(message.chat.id, message.id)
+    await bot.send_message(message.chat.id, "********")
+    await bot.delete_state(message.from_user.id, message.chat.id)
+    jira = jira_auth(jira_user, jira_pass)
+    if jira is None:
+        await bot.send_message(
+            message.chat.id,
+            """
+Неверный логин или пароль!
+                   
+Для повторной авторизации - /login
+                               """,
+        )
+    else:
+        await bot.send_message(message.chat.id, "Вы успешно авторизованы!")
+
+
+def jira_auth(login: str, password: str) -> JIRA | None:
+    jira_options = {"server": settings.JIRA_URL}
+    try:
+        jira = JIRA(options=jira_options, basic_auth=(login, password))
+        return jira
+    except:
+        return None
