@@ -6,6 +6,7 @@ class Settings(BaseSettings):
 
     BOT_TOKEN: str
     JIRA_URL: str
+    SECRET_KEY: str
 
 
 settings = Settings()

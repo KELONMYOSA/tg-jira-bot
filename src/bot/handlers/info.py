@@ -4,19 +4,20 @@ from telebot.types import Message
 from src.db.dao import Database
 
 
+# Test method --- REMOVE!
 def run(bot: AsyncTeleBot):
-    @bot.message_handler(commands=["login"])
-    async def login(message: Message):
+    @bot.message_handler(commands=["info"])
+    async def my_info(message: Message):
         with Database() as db:
             if db.is_authorized(message.from_user.id):
+                user_credentials = db.get_user(message.from_user.id)
+                await bot.send_message(message.chat.id, ", ".join(user_credentials))
+            else:
                 await bot.send_message(
                     message.chat.id,
                     """
-Вы уже авторизованны!
+Необходимо авторизоваться!
 
-Для выхода из аккаунта - /logout
+Для авторизации - /login
                         """,
                 )
-            else:
-                await bot.send_message(message.chat.id, "Введите логин:")
-                await bot.set_state(message.from_user.id, "jira_user", message.chat.id)

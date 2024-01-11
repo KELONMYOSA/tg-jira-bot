@@ -3,6 +3,7 @@ from telebot.types import Message
 
 from src.bot.app import bot
 from src.config import settings
+from src.db.dao import Database
 
 
 async def get_jira_user(message: Message):
@@ -24,11 +25,13 @@ async def get_jira_pass(message: Message, jira_user: str):
             message.chat.id,
             """
 Неверный логин или пароль!
-                   
+
 Для повторной авторизации - /login
                                """,
         )
     else:
+        with Database() as db:
+            db.set_user(message.from_user.id, message.from_user.username, jira_user, jira_pass)
         await bot.send_message(message.chat.id, "Вы успешно авторизованы!")
 
 

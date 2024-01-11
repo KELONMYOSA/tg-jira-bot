@@ -1,11 +1,11 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
-from src.bot.utils.jira_auth import get_jira_user, get_jira_pass
+from src.bot.utils.jira_auth import get_jira_pass, get_jira_user
 
 
 def run(bot: AsyncTeleBot):
-    @bot.message_handler(func=lambda message: message.text not in ["/start", "/login"])
+    @bot.message_handler(func=lambda message: message.text not in ["/start", "/login", "/logout", "/info"])
     async def echo_all(message: Message):
         user_state = await bot.get_state(message.from_user.id, message.chat.id)
 
