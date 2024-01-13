@@ -20,19 +20,25 @@ def run(bot: AsyncTeleBot):
             await bot.delete_message(message.chat.id, message.message_id)
             return
 
+        # Получение логина для авторизации
         if user_state == "jira_user":
             await get_jira_user(message)
+        # Получение пароля для авторизации
         elif user_state.startswith("jira_pass_"):
             jira_user = user_state.replace("jira_pass_", "")
             await get_jira_pass(message, jira_user)
+        # Получение названия для создания задачи
         elif user_state == "create_issue_summary":
             await create_issue_summary(message)
+        # Получение приоритета для создания задачи
         elif user_state.startswith("create_issue_priority_"):
             summary = user_state.replace("create_issue_priority_", "")
             await create_issue_priority(message, summary)
+        # Получение описания для создания задачи
         elif user_state.startswith("create_issue_description_"):
             data = user_state.replace("create_issue_description_", "").split("_|_")
             await create_issue_description(message, *data)
+        # Получение подтверждения для создания задачи
         elif user_state.startswith("create_issue_confirm_"):
             data = user_state.replace("create_issue_confirm_", "").split("_|_")
             await create_issue_confirm(message, *data)

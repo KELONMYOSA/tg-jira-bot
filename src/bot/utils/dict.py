@@ -1,4 +1,4 @@
-commands_list = ["/start", "/login", "/logout", "/info"]
+commands_list = ["/start", "/login", "/logout", "/create", "/my"]
 
 priority2text = {
     "1": "Минимальный",
