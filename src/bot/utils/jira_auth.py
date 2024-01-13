@@ -10,7 +10,7 @@ async def get_jira_user(message: Message):
     jira_user = message.text.strip()
     await bot.delete_message(message.chat.id, message.id)
     await bot.send_message(message.chat.id, "********")
-    await bot.send_message(message.chat.id, "Введите пароль:")
+    await bot.send_message(message.chat.id, "Введите пароль или API-ключ:")
     await bot.set_state(message.from_user.id, f"jira_pass_{jira_user}", message.chat.id)
 
 
@@ -42,3 +42,20 @@ def jira_auth(login: str, password: str) -> JIRA | None:
         return jira
     except:
         return None
+
+
+async def get_credentials(tg_user_id: id) -> tuple | None:
+    with Database() as db:
+        if db.is_authorized(tg_user_id):
+            user_credentials = db.get_user(tg_user_id)
+            return user_credentials
+        else:
+            await bot.send_message(
+                tg_user_id,
+                """
+Необходимо авторизоваться!
+
+Для авторизации - /login
+                    """,
+            )
+            return None
