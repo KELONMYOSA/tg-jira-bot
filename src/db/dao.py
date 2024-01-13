@@ -53,6 +53,12 @@ class Database:
         decrypted_password = self._decrypt_password(jira_password)
         return jira_login, decrypted_password
 
+    # Получение данных Telegram пользователя по данным Jira
+    def get_tg_users(self, jira_login: str) -> list:
+        self.cur.execute("SELECT tg_user_id, tg_username FROM user_credentials WHERE jira_login = ?", (jira_login,))
+        tg_user_data = self.cur.fetchall()
+        return tg_user_data
+
     # Удаление данных пользователя
     def remove_user(self, user_id: int):
         self.cur.execute("DELETE FROM user_credentials WHERE tg_user_id = ?", (user_id,))

@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  jira_bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: jira_bot
+    container_name: jira_bot
+    volumes:
+      - ./src/db/database.sqlite:/src/db/database.sqlite
+    ports:
+      - "80:80"
+    restart: unless-stopped
