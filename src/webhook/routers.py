@@ -24,8 +24,8 @@ async def webhook(request: Request):
                     await bot.send_message(
                         tg_user[0],
                         f"""
-Была создана новая задача с Вашим участием: 
-                            
+Была создана новая задача с Вашим участием:
+
 Ключ: {key}
 Название: {summary}
 Приоритет: {priority}

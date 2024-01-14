@@ -8,7 +8,7 @@ services:
     image: jira_bot
     container_name: jira_bot
     volumes:
-      - ./src/db/database.sqlite:/src/db/database.sqlite
+      - /src/db/database.sqlite:/src/db/database.sqlite
     ports:
       - "80:80"
     restart: unless-stopped
