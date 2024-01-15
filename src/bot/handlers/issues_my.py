@@ -19,7 +19,7 @@ def run(bot: AsyncTeleBot):
             await bot.send_message(message.chat.id, "Ваши задачи:")
             for issue in issues:
                 keyboard = InlineKeyboardMarkup()
-                close_issue_button = InlineKeyboardButton("Закрыть", callback_data=f"close_issue_confirm_{issue.key}")
+                close_issue_button = InlineKeyboardButton("Статус", callback_data=f"status_issue_select_{issue.key}")
                 comments_issue_button = InlineKeyboardButton(
                     "Комментарии", callback_data=f"comments_issue_get_{issue.key}"
                 )
@@ -29,6 +29,7 @@ def run(bot: AsyncTeleBot):
                     f"""
 Ключ: {issue.key}
 Название: {issue.fields.summary}
+Статус: {issue.fields.status.name}
 Приоритет: {issue.fields.priority.name}
 Описание: {issue.fields.description}
                         """,
