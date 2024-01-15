@@ -64,6 +64,7 @@ async def create_issue_confirm(message: Message, summary: str, priority: str, de
             priority={"name": priority2text[priority]},
             description=description,
         )
+        await bot.delete_state(message.from_user.id, message.chat.id)
         await bot.send_message(message.chat.id, f"Задача {issue.key} создана")
     elif confirm == "нет":
         await bot.delete_state(message.from_user.id, message.chat.id)

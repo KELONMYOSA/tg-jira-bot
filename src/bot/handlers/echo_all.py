@@ -1,7 +1,8 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
-from src.bot.handlers.create_issue import (
+from src.bot.handlers.issue_comments import comments_issue_new_confirm, comments_issue_new_text
+from src.bot.handlers.issue_create import (
     create_issue_confirm,
     create_issue_description,
     create_issue_priority,
@@ -42,3 +43,11 @@ def run(bot: AsyncTeleBot):
         elif user_state.startswith("create_issue_confirm_"):
             data = user_state.replace("create_issue_confirm_", "").split("_|_")
             await create_issue_confirm(message, *data)
+        # Получение текста для создания комментария
+        elif user_state.startswith("comments_issue_new_"):
+            issue_key = user_state.replace("comments_issue_new_", "")
+            await comments_issue_new_text(message, issue_key)
+        # Получение подтверждения для создания комментария
+        elif user_state.startswith("comments_issue_confirm_"):
+            data = user_state.replace("comments_issue_confirm_", "").split("_|_")
+            await comments_issue_new_confirm(message, *data)

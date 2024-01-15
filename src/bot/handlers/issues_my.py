@@ -1,5 +1,5 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from src.bot.utils.jira_auth import get_credentials, jira_auth
 
@@ -18,6 +18,12 @@ def run(bot: AsyncTeleBot):
         else:
             await bot.send_message(message.chat.id, "Ваши задачи:")
             for issue in issues:
+                keyboard = InlineKeyboardMarkup()
+                close_issue_button = InlineKeyboardButton("Закрыть", callback_data=f"close_issue_confirm_{issue.key}")
+                comments_issue_button = InlineKeyboardButton(
+                    "Комментарии", callback_data=f"comments_issue_get_{issue.key}"
+                )
+                keyboard.add(close_issue_button, comments_issue_button)
                 await bot.send_message(
                     message.chat.id,
                     f"""
@@ -26,4 +32,5 @@ def run(bot: AsyncTeleBot):
 Приоритет: {issue.fields.priority.name}
 Описание: {issue.fields.description}
                         """,
+                    reply_markup=keyboard,
                 )
