@@ -50,9 +50,9 @@ async def webhook(request: Request):
             keyboard.add(new_comment_button)
 
             if r["issue_event_type_name"] == "issue_commented":
-                message_header = f"Был добавлен комментарий к задаче {key}:"
+                message_header = f"Был добавлен комментарий к задаче {key}:\n"
             elif r["issue_event_type_name"] == "issue_comment_edited":
-                message_header = f"Был изменен комментарий к задаче {key}:"
+                message_header = f"Был изменен комментарий к задаче {key}:\n"
 
     if message_header is not None:
         with Database() as db:
@@ -61,7 +61,7 @@ async def webhook(request: Request):
                 try:
                     await bot.send_message(
                         tg_user[0],
-                        message_header + "\n\n" + message_body,
+                        message_header + "\n" + message_body,
                         reply_markup=keyboard,
                     )
                 except:
