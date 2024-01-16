@@ -9,10 +9,12 @@ router = APIRouter()
 @router.post("/jira/webhook")
 async def webhook(request: Request):
     r = await request.json()
+    print(r)
     if r["webhookEvent"] == "jira:issue_created":
         issue = r["issue"]
         key = issue["key"]
         summary = issue["fields"]["summary"]
+        status = issue["fields"]["status"]["name"]
         priority = issue["fields"]["priority"]["name"]
         description = issue["fields"]["description"]
         assignee = issue["fields"]["assignee"]["name"]
@@ -28,6 +30,7 @@ async def webhook(request: Request):
 
 Ключ: {key}
 Название: {summary}
+Статус: {status}
 Приоритет: {priority}
 Описание: {description}
                         """,
