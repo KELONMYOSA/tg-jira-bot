@@ -30,7 +30,7 @@ async def webhook(request: Request):
                     """
     keyboard = InlineKeyboardMarkup()
     close_issue_button = InlineKeyboardButton("Статус", callback_data=f"status_issue_select_{key}")
-    comments_issue_button = InlineKeyboardButton("Комментарии", callback_data=f"comments_issue_get_{issue.key}")
+    comments_issue_button = InlineKeyboardButton("Комментарии", callback_data=f"comments_issue_get_{key}")
     keyboard.add(close_issue_button, comments_issue_button)
 
     if r["webhookEvent"] == "jira:issue_created":
