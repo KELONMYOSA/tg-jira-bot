@@ -29,6 +29,7 @@ def run(bot: AsyncTeleBot):
                     f"""
 Ключ: {issue.key}
 Название: {issue.fields.summary}
+Исполнитель: {issue.fields.assignee.displayName}
 Статус: {issue.fields.status.name}
 Приоритет: {issue.fields.priority.name}
 Описание: {issue.fields.description}

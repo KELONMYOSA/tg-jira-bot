@@ -8,6 +8,7 @@ from src.bot.handlers.issue_create import (
     create_issue_priority,
     create_issue_summary,
 )
+from src.bot.handlers.issues_search import search_issues_key
 from src.bot.utils.dict import commands_list
 from src.bot.utils.jira_auth import get_jira_pass, get_jira_user
 
@@ -48,3 +49,6 @@ def run(bot: AsyncTeleBot):
         elif user_state.startswith("comments_issue_new_"):
             issue_key = user_state.replace("comments_issue_new_", "")
             await comments_issue_new_text(message, issue_key)
+        # Получение текста для поиска задачи по ключу
+        elif user_state == "search_issue":
+            await search_issues_key(message)
