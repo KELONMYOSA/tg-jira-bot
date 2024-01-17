@@ -1,7 +1,7 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
-from src.bot.handlers.issue_comments import comments_issue_new_confirm, comments_issue_new_text
+from src.bot.handlers.issue_comments import comments_issue_new_text
 from src.bot.handlers.issue_create import (
     create_issue_confirm,
     create_issue_description,
@@ -29,12 +29,13 @@ def run(bot: AsyncTeleBot):
             jira_user = user_state.replace("jira_pass_", "")
             await get_jira_pass(message, jira_user)
         # Получение названия для создания задачи
-        elif user_state == "create_issue_summary":
-            await create_issue_summary(message)
+        elif user_state.startswith("create_issue_summary_"):
+            data = user_state.replace("create_issue_summary_", "").split("_|_")
+            await create_issue_summary(message, *data)
         # Получение приоритета для создания задачи
         elif user_state.startswith("create_issue_priority_"):
-            summary = user_state.replace("create_issue_priority_", "")
-            await create_issue_priority(message, summary)
+            data = user_state.replace("create_issue_priority_", "").split("_|_")
+            await create_issue_priority(message, *data)
         # Получение описания для создания задачи
         elif user_state.startswith("create_issue_description_"):
             data = user_state.replace("create_issue_description_", "").split("_|_")
@@ -47,7 +48,3 @@ def run(bot: AsyncTeleBot):
         elif user_state.startswith("comments_issue_new_"):
             issue_key = user_state.replace("comments_issue_new_", "")
             await comments_issue_new_text(message, issue_key)
-        # Получение подтверждения для создания комментария
-        elif user_state.startswith("comments_issue_confirm_"):
-            data = user_state.replace("comments_issue_confirm_", "").split("_|_")
-            await comments_issue_new_confirm(message, *data)

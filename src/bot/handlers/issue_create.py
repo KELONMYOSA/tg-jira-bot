@@ -1,8 +1,8 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
+from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from src.bot.app import bot
-from src.bot.utils.dict import priority2text
+from src.bot.utils.dict import executor_name2displayName, priority2text
 from src.bot.utils.jira_auth import get_credentials, jira_auth
 
 
@@ -12,32 +12,79 @@ def run(bot: AsyncTeleBot):
         credentials = await get_credentials(message.from_user.id)
         if credentials is None:
             return
-        await bot.send_message(message.chat.id, "Создание задачи. Введите название задачи:")
-        await bot.set_state(message.from_user.id, "create_issue_summary", message.chat.id)
+        jira = jira_auth(*credentials)
+        projects = jira.projects()
+
+        keyboard_buttons = []
+        for project in projects:
+            keyboard_buttons.append(
+                InlineKeyboardButton(project.name, callback_data=f"create_issue_project_{project.key}")
+            )
+        keyboard = InlineKeyboardMarkup(row_width=1).add(*keyboard_buttons)
+
+        await bot.send_message(message.chat.id, "Создание задачи. Выберите проект:", reply_markup=keyboard)
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("create_issue_project_"))
+    async def create_issue_project(call: CallbackQuery):
+        await bot.answer_callback_query(call.id)
+        await bot.delete_message(call.message.chat.id, call.message.id)
+
+        project_key = call.data.replace("create_issue_project_", "")
+        await bot.send_message(call.message.chat.id, f"Проект - {project_key}")
+
+        keyboard_buttons = []
+        for name in executor_name2displayName:
+            keyboard_buttons.append(
+                InlineKeyboardButton(
+                    executor_name2displayName[name], callback_data=f"create_issue_executor_{project_key}_|_{name}"
+                )
+            )
+        keyboard = InlineKeyboardMarkup(row_width=1).add(*keyboard_buttons)
+
+        await bot.send_message(call.message.chat.id, "Выберите исполнителя:", reply_markup=keyboard)
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("create_issue_executor_"))
+    async def create_issue_executor(call: CallbackQuery):
+        await bot.answer_callback_query(call.id)
+        await bot.delete_message(call.message.chat.id, call.message.id)
+
+        project_key, executor = call.data.replace("create_issue_executor_", "").split("_|_")
+        await bot.send_message(call.message.chat.id, f"Исполнитель - {executor_name2displayName[executor]}")
+        await bot.send_message(call.message.chat.id, "Введите название задачи:")
+        await bot.set_state(
+            call.message.chat.id, f"create_issue_summary_{project_key}_|_{executor}", call.message.chat.id
+        )
 
 
-async def create_issue_summary(message: Message):
+async def create_issue_summary(message: Message, project_key: str, executor: str):
     summary = message.text.strip()
     await bot.send_message(message.chat.id, "Введите приоритет задачи (1 - Минимальный, 5 - Наивысший):")
-    await bot.set_state(message.from_user.id, f"create_issue_priority_{summary}", message.chat.id)
+    await bot.set_state(
+        message.from_user.id, f"create_issue_priority_{project_key}_|_{executor}_|_{summary}", message.chat.id
+    )
 
 
-async def create_issue_priority(message: Message, summary: str):
+async def create_issue_priority(message: Message, project_key: str, executor: str, summary: str):
     priority = message.text.strip()
     if priority not in priority2text:
         await bot.send_message(message.chat.id, "Это должно быть число от 1 до 5:")
     else:
         await bot.send_message(message.chat.id, "Введите описание задачи:")
-        await bot.set_state(message.from_user.id, f"create_issue_description_{summary}_|_{priority}", message.chat.id)
+        await bot.set_state(
+            message.from_user.id,
+            f"create_issue_description_{project_key}_|_{executor}_|_{summary}_|_{priority}",
+            message.chat.id,
+        )
 
 
-async def create_issue_description(message: Message, summary: str, priority: str):
+async def create_issue_description(message: Message, project_key: str, executor: str, summary: str, priority: str):
     priority_text = priority2text[priority]
     description = message.text.strip()
     await bot.send_message(
         message.chat.id,
         f"""
-Проект: TEST1
+Проект: {project_key}
+Исполнитель: {executor_name2displayName[executor]}
 Название: {summary}
 Приоритет: {priority_text}
 Описание: {description}
@@ -46,11 +93,15 @@ async def create_issue_description(message: Message, summary: str, priority: str
         """,
     )
     await bot.set_state(
-        message.from_user.id, f"create_issue_confirm_{summary}_|_{priority}_|_{description}", message.chat.id
+        message.from_user.id,
+        f"create_issue_confirm_{project_key}_|_{executor}_|_{summary}_|_{priority}_|_{description}",
+        message.chat.id,
     )
 
 
-async def create_issue_confirm(message: Message, summary: str, priority: str, description: str):
+async def create_issue_confirm(
+    message: Message, project_key: str, executor: str, summary: str, priority: str, description: str
+):
     confirm = message.text.strip().lower()
     if confirm == "да":
         credentials = await get_credentials(message.from_user.id)
@@ -58,7 +109,8 @@ async def create_issue_confirm(message: Message, summary: str, priority: str, de
             return
         jira = jira_auth(*credentials)
         issue = jira.create_issue(
-            project="TEST1",
+            project=project_key,
+            assignee={"name": executor},
             summary=summary,
             issuetype={"name": "Задача"},
             priority={"name": priority2text[priority]},

@@ -12,7 +12,7 @@ def run(bot: AsyncTeleBot):
             return
         jira = jira_auth(*credentials)
 
-        issues = jira.search_issues(f"assignee was '{credentials[0]}' or reporter was '{credentials[0]}'")
+        issues = jira.search_issues(f"assignee = '{credentials[0]}' or reporter = '{credentials[0]}' order by created")
         if not issues:
             await bot.send_message(message.chat.id, "Ваши задачи не были найдены!")
         else:

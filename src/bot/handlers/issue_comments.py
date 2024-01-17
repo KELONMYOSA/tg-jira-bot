@@ -46,31 +46,13 @@ def run(bot: AsyncTeleBot):
 
 
 async def comments_issue_new_text(message: Message, issue_key: str):
-    text = message.text.strip()
-    await bot.send_message(
-        message.chat.id,
-        f"""
-{text}
+    comment_text = message.text.strip()
 
-Добавить этот комментарий к задаче {issue_key}? (Да/Нет)
-        """,
-    )
-    await bot.set_state(message.from_user.id, f"comments_issue_confirm_{issue_key}_|_{text}", message.chat.id)
+    credentials = await get_credentials(message.from_user.id)
+    if credentials is None:
+        return
+    jira = jira_auth(*credentials)
+    jira.add_comment(issue_key, comment_text)
 
-
-async def comments_issue_new_confirm(message: Message, issue_key: str, comment_text: str):
-    confirm = message.text.strip().lower()
-    if confirm == "да":
-        credentials = await get_credentials(message.from_user.id)
-        if credentials is None:
-            return
-        jira = jira_auth(*credentials)
-        jira.add_comment(issue_key, comment_text)
-
-        await bot.delete_state(message.from_user.id, message.chat.id)
-        await bot.send_message(message.chat.id, f"Комментарий к задаче {issue_key} был добавлен")
-    elif confirm == "нет":
-        await bot.delete_state(message.from_user.id, message.chat.id)
-        await bot.send_message(message.chat.id, f"Отмена комментария к задаче {issue_key}")
-    else:
-        await bot.send_message(message.chat.id, "Введите Да или Нет:")
+    await bot.delete_state(message.from_user.id, message.chat.id)
+    await bot.send_message(message.chat.id, f"Комментарий к задаче {issue_key} был добавлен")
