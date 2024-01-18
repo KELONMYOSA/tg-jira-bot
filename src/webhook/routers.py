@@ -48,7 +48,7 @@ async def webhook(request: Request):
             comment = r["comment"]
             comment_text = comment["body"]
 
-            mentioned_users = re.findall(r"\[~([^]]+)]", comment)
+            mentioned_users = re.findall(r"\[~([^]]+)]", comment_text)
             assignees = mentioned_users
 
             input_datetime = datetime.strptime(comment["created"], "%Y-%m-%dT%H:%M:%S.%f%z")
