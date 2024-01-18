@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 from fastapi import APIRouter, Request
@@ -18,7 +19,7 @@ async def webhook(request: Request):
     status = issue["fields"]["status"]["name"]
     priority = issue["fields"]["priority"]["name"]
     description = issue["fields"]["description"]
-    assignee = issue["fields"]["assignee"]["name"]
+    assignees = [issue["fields"]["assignee"]["name"]]
 
     message_header = None
     message_body = f"""
@@ -39,25 +40,36 @@ async def webhook(request: Request):
     elif r["webhookEvent"] == "jira:issue_updated":
         if r["issue_event_type_name"] == "issue_updated":
             message_header = "Была обновлена задача с Вашим участием:"
+        elif r["issue_event_type_name"] == "issue_generic":
+            message_header = "Был изменен статус задачи с Вашим участием:"
+        elif r["issue_event_type_name"] == "issue_assigned":
+            message_header = "Вы были назначены исполнителем задачи:"
         else:
             comment = r["comment"]
+            comment_text = comment["body"]
+
+            mentioned_users = re.findall(r"\[~([^]]+)]", comment)
+            assignees = mentioned_users
+
             input_datetime = datetime.strptime(comment["created"], "%Y-%m-%dT%H:%M:%S.%f%z")
             output_datetime = input_datetime.strftime("%d.%m в %H:%M")
             message_body = f"{output_datetime} - {comment['author']['displayName']} ({comment['author']['name']}):\n"
-            message_body += comment["body"]
+            message_body += comment_text
 
             keyboard = InlineKeyboardMarkup()
             new_comment_button = InlineKeyboardButton("Написать", callback_data=f"comments_issue_new_{key}")
             keyboard.add(new_comment_button)
 
             if r["issue_event_type_name"] == "issue_commented":
-                message_header = f"Был добавлен комментарий к задаче {key}:\n"
+                message_header = f"Вы были упомянуты в комментарии к задаче {key}:\n"
             elif r["issue_event_type_name"] == "issue_comment_edited":
-                message_header = f"Был изменен комментарий к задаче {key}:\n"
+                message_header = f"Был изменен комментарий к задаче {key} с Вашим упоминанием:\n"
 
     if message_header is not None:
         with Database() as db:
-            tg_users = db.get_tg_users(assignee)
+            tg_users = []
+            for assignee in assignees:
+                tg_users.extend(db.get_tg_users(assignee))
             for tg_user in tg_users:
                 try:
                     await bot.send_message(
