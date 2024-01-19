@@ -10,5 +10,5 @@ services:
     volumes:
       - ./src/db/database.sqlite:/app/src/db/database.sqlite
     ports:
-      - "80:80"
+      - "8080:8080"
     restart: unless-stopped
