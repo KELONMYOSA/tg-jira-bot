@@ -8,7 +8,7 @@ from src.webhook.app import app
 
 def start_uvicorn(loop):
     host = "0.0.0.0"
-    port = 8080
+    port = 5555
     config = uvicorn.Config(app, host=host, port=port, loop=loop)
     server = uvicorn.Server(config)
     loop.run_until_complete(server.serve())
