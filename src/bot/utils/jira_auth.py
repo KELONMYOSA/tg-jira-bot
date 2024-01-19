@@ -19,12 +19,7 @@ async def get_jira_pass(message: Message, jira_user: str):
     await bot.delete_message(message.chat.id, message.id)
     await bot.send_message(message.chat.id, "********")
     await bot.delete_state(message.from_user.id, message.chat.id)
-    try:
-        jira = jira_auth(jira_user, jira_pass)
-    except Exception as e:
-        await bot.send_message(message.chat.id, "Не удается подключиться к Jira!")
-        print(e)
-        return
+    jira = jira_auth(jira_user, jira_pass)
     if jira is None:
         await bot.send_message(
             message.chat.id,
