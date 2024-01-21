@@ -30,10 +30,10 @@ async def webhook(request: Request):
 Описание: {description}
                     """
     keyboard = InlineKeyboardMarkup()
-    status_issue_button = InlineKeyboardButton("Статус", callback_data=f"status_issue_select_{key}")
+    edit_issue_button = InlineKeyboardButton("Изменить", callback_data=f"edit_issue_{key}")
     comments_issue_button = InlineKeyboardButton("Комментарии", callback_data=f"comments_issue_get_{key}")
     attachments_issue_button = InlineKeyboardButton("Вложения", callback_data=f"attachments_issue_get_{key}")
-    keyboard.add(status_issue_button, comments_issue_button, attachments_issue_button)
+    keyboard.add(edit_issue_button, comments_issue_button, attachments_issue_button)
 
     if r["webhookEvent"] == "jira:issue_created":
         message_header = "Была создана новая задача с Вашим участием:"
