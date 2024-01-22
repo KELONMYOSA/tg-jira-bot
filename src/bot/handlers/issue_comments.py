@@ -56,3 +56,13 @@ async def comments_issue_new_text(message: Message, issue_key: str):
 
     await bot.delete_state(message.from_user.id, message.chat.id)
     await bot.send_message(message.chat.id, f"Комментарий к задаче {issue_key} был добавлен")
+
+
+async def comments_issue_reply(chat_id: int, issue_key: str, comment_text: str):
+    credentials = await get_credentials(chat_id)
+    if credentials is None:
+        return
+    jira = jira_auth(*credentials)
+    jira.add_comment(issue_key, comment_text)
+
+    await bot.send_message(chat_id, f"Ответ на комментарий к задаче {issue_key} был добавлен")

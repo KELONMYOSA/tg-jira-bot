@@ -2,6 +2,7 @@ import re
 from datetime import datetime
 
 from fastapi import APIRouter, Request
+from telebot.formatting import hlink
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from src.bot.app import bot
@@ -23,7 +24,7 @@ async def webhook(request: Request):
 
     message_header = None
     message_body = f"""
-Ключ: {key}
+Ключ: {hlink(key, 'https://jira.comfortel.pro/browse/' + key)}
 Название: {summary}
 Статус: {status}
 Приоритет: {priority}
@@ -61,9 +62,15 @@ async def webhook(request: Request):
             keyboard.add(new_comment_button)
 
             if r["issue_event_type_name"] == "issue_commented":
-                message_header = f"Вы были упомянуты в комментарии к задаче {key}:\n"
+                message_header = (
+                    f"Вы были упомянуты в комментарии к задаче "
+                    f"{hlink(key, 'https://jira.comfortel.pro/browse/' + key)}:\n"
+                )
             elif r["issue_event_type_name"] == "issue_comment_edited":
-                message_header = f"Был изменен комментарий к задаче {key} с Вашим упоминанием:\n"
+                message_header = (
+                    f"Был изменен комментарий к задаче "
+                    f"{hlink(key, 'https://jira.comfortel.pro/browse/' + key)} с Вашим упоминанием:\n"
+                )
 
     if message_header is not None:
         with Database() as db:
@@ -73,9 +80,7 @@ async def webhook(request: Request):
             for tg_user in tg_users:
                 try:
                     await bot.send_message(
-                        tg_user[0],
-                        message_header + "\n" + message_body,
-                        reply_markup=keyboard,
+                        tg_user[0], message_header + "\n" + message_body, reply_markup=keyboard, parse_mode="HTML"
                     )
                 except:
                     print(f"Unable to send a message to {tg_user[1]}")

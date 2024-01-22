@@ -1,5 +1,6 @@
 from jira.client import ResultList
 from telebot.async_telebot import AsyncTeleBot
+from telebot.formatting import hlink
 from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from src.bot.app import bot
@@ -56,7 +57,7 @@ def run(bot: AsyncTeleBot):
         await bot.send_message(
             call.message.chat.id,
             f"""
-Ключ: {issue.key}
+Ключ: {hlink(issue.key, 'https://jira.comfortel.pro/browse/' + issue.key)}
 Название: {issue.fields.summary}
 Исполнитель: {issue.fields.assignee.displayName}
 Статус: {issue.fields.status.name}
@@ -64,6 +65,7 @@ def run(bot: AsyncTeleBot):
 Описание: {issue.fields.description}
                 """,
             reply_markup=keyboard,
+            parse_mode="HTML",
         )
 
 
@@ -72,7 +74,7 @@ async def my_issues_change_page(chat_id: int, page_num: int, issues: ResultList,
     issue_num_buttons = []
     n = 1 + (page_num - 1) * per_page
     for issue in issues[(page_num - 1) * per_page : page_num * per_page]:
-        message_rows.append(f"{n}. {issue.fields.summary}")
+        message_rows.append(f"{n}. {issue.fields.summary} ({issue.fields.assignee.name})")
         issue_num_buttons.append(InlineKeyboardButton(n, callback_data=f"about_issue_{issue.key}"))
         n += 1
 
