@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 
 from fastapi import APIRouter, Request
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, MessageEntity
 
 from src.bot.app import bot
 from src.db.dao import Database
@@ -22,8 +22,9 @@ async def webhook(request: Request):
     assignees = [issue["fields"]["assignee"]["name"]]
 
     message_header = None
+    hlink = None
     message_body = f"""
-Ключ: [{key}]({'https://jira.comfortel.pro/browse/' + key})
+Ключ: {key}
 Название: {summary}
 Статус: {status}
 Приоритет: {priority}
@@ -37,13 +38,25 @@ async def webhook(request: Request):
 
     if r["webhookEvent"] == "jira:issue_created":
         message_header = "Была создана новая задача с Вашим участием:"
+        hlink = MessageEntity(
+            "text_link", len(message_header) + 7, len(key), f"https://jira.comfortel.pro/browse/{key}"
+        )
     elif r["webhookEvent"] == "jira:issue_updated":
         if r["issue_event_type_name"] == "issue_updated":
             message_header = "Была обновлена задача с Вашим участием:"
+            hlink = MessageEntity(
+                "text_link", len(message_header) + 7, len(key), f"https://jira.comfortel.pro/browse/{key}"
+            )
         elif r["issue_event_type_name"] == "issue_generic":
             message_header = "Был изменен статус задачи с Вашим участием:"
+            hlink = MessageEntity(
+                "text_link", len(message_header) + 7, len(key), f"https://jira.comfortel.pro/browse/{key}"
+            )
         elif r["issue_event_type_name"] == "issue_assigned":
             message_header = "Вы были назначены исполнителем задачи:"
+            hlink = MessageEntity(
+                "text_link", len(message_header) + 7, len(key), f"https://jira.comfortel.pro/browse/{key}"
+            )
         elif "comment" in r:
             comment = r["comment"]
             comment_text = comment["body"]
@@ -61,15 +74,11 @@ async def webhook(request: Request):
             keyboard.add(new_comment_button)
 
             if r["issue_event_type_name"] == "issue_commented":
-                message_header = (
-                    f"Вы были упомянуты в комментарии к задаче "
-                    f"[{key}]({'https://jira.comfortel.pro/browse/' + key}):\n"
-                )
+                message_header = f"Вы были упомянуты в комментарии к задаче {key}:\n"
+                hlink = MessageEntity("text_link", 41, len(key), f"https://jira.comfortel.pro/browse/{key}")
             elif r["issue_event_type_name"] == "issue_comment_edited":
-                message_header = (
-                    f"Был изменен комментарий к задаче "
-                    f"[{key}]({'https://jira.comfortel.pro/browse/' + key}) с Вашим упоминанием:\n"
-                )
+                message_header = f"Был изменен комментарий к задаче {key} с Вашим упоминанием:\n"
+                hlink = MessageEntity("text_link", 33, len(key), f"https://jira.comfortel.pro/browse/{key}")
 
     if message_header is not None:
         with Database() as db:
@@ -79,7 +88,7 @@ async def webhook(request: Request):
             for tg_user in tg_users:
                 try:
                     await bot.send_message(
-                        tg_user[0], message_header + "\n" + message_body, reply_markup=keyboard, parse_mode="HTML"
+                        tg_user[0], message_header + "\n" + message_body, reply_markup=keyboard, entities=[hlink]
                     )
                 except:
                     print(f"Unable to send a message to {tg_user[1]}")

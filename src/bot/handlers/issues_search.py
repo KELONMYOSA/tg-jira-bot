@@ -1,5 +1,5 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, MessageEntity
 
 from src.bot.app import bot
 from src.bot.utils.jira_auth import get_credentials, jira_auth
@@ -33,10 +33,11 @@ async def search_issues_key(message: Message):
                 "Вложения", callback_data=f"attachments_issue_get_{issue.key}"
             )
             keyboard.add(edit_issue_button, comments_issue_button, attachments_issue_button)
+            hlink = MessageEntity("text_link", 6, len(issue.key), f"https://jira.comfortel.pro/browse/{issue.key}")
             await bot.send_message(
                 message.chat.id,
                 f"""
-Ключ: [{issue.key}]({'https://jira.comfortel.pro/browse/' + issue.key})
+Ключ: {issue.key}
 Название: {issue.fields.summary}
 Исполнитель: {issue.fields.assignee.displayName}
 Статус: {issue.fields.status.name}
@@ -44,5 +45,5 @@ async def search_issues_key(message: Message):
 Описание: {issue.fields.description}
                 """,
                 reply_markup=keyboard,
-                parse_mode="Markdown",
+                entities=[hlink],
             )

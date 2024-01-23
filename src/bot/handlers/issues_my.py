@@ -1,6 +1,6 @@
 from jira.client import ResultList
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
+from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message, MessageEntity
 
 from src.bot.app import bot
 from src.bot.utils.jira_auth import get_credentials, jira_auth
@@ -53,10 +53,11 @@ def run(bot: AsyncTeleBot):
         comments_issue_button = InlineKeyboardButton("Комментарии", callback_data=f"comments_issue_get_{issue.key}")
         attachments_issue_button = InlineKeyboardButton("Вложения", callback_data=f"attachments_issue_get_{issue.key}")
         keyboard.add(edit_issue_button, comments_issue_button, attachments_issue_button)
+        hlink = MessageEntity("text_link", 6, len(issue.key), f"https://jira.comfortel.pro/browse/{issue.key}")
         await bot.send_message(
             call.message.chat.id,
             f"""
-Ключ: [{issue.key}]({'https://jira.comfortel.pro/browse/' + issue.key})
+Ключ: {issue.key}
 Название: {issue.fields.summary}
 Исполнитель: {issue.fields.assignee.displayName}
 Статус: {issue.fields.status.name}
@@ -64,7 +65,7 @@ def run(bot: AsyncTeleBot):
 Описание: {issue.fields.description}
                 """,
             reply_markup=keyboard,
-            parse_mode="Markdown",
+            entities=[hlink],
         )
 
 
