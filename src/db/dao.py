@@ -56,8 +56,10 @@ class Database:
     # Получение зарегистрированного Telegram пользователя по данным Jira
     def get_registered_tg_user(self, jira_login: str) -> int | None:
         self.cur.execute("SELECT tg_user_id FROM user_registration WHERE jira_login = ?", (jira_login,))
-        tg_user_data = self.cur.fetchone()[0]
-        return tg_user_data
+        tg_user_data = self.cur.fetchone()
+        if tg_user_data is None:
+            return None
+        return tg_user_data[0]
 
     # Получение данных пользователя Jira
     def get_user(self, user_id: int) -> tuple:
