@@ -91,7 +91,7 @@ async def create_issue_description(message: Message, project_key: str, executor:
 
 Создать задачу? (Да/Нет)
         """,
-        disable_web_page_preview=True
+        disable_web_page_preview=True,
     )
     await bot.set_state(
         message.from_user.id,

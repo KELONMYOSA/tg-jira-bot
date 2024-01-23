@@ -46,6 +46,19 @@ class Database:
             (tg_user_id, tg_username, jira_login, encrypted_password),
         )
 
+    # Привязываем telegram пользователя к логину Jira
+    def register_user(self, tg_user_id: int, tg_username: str, jira_login: str):
+        self.cur.execute(
+            "INSERT OR IGNORE INTO user_registration (tg_user_id, tg_username, jira_login) VALUES (?, ?, ?)",
+            (tg_user_id, tg_username, jira_login),
+        )
+
+    # Получение зарегистрированного Telegram пользователя по данным Jira
+    def get_registered_tg_user(self, jira_login: str) -> int | None:
+        self.cur.execute("SELECT tg_user_id FROM user_registration WHERE jira_login = ?", (jira_login,))
+        tg_user_data = self.cur.fetchone()[0]
+        return tg_user_data
+
     # Получение данных пользователя Jira
     def get_user(self, user_id: int) -> tuple:
         self.cur.execute("SELECT jira_login, jira_password FROM user_credentials WHERE tg_user_id = ?", (user_id,))

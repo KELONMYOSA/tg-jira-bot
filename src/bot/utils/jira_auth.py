@@ -10,6 +10,14 @@ async def get_jira_user(message: Message):
     jira_user = message.text.strip()
     await bot.delete_message(message.chat.id, message.id)
     await bot.send_message(message.chat.id, "********")
+
+    with Database() as db:
+        registered_tg_user = db.get_registered_tg_user(jira_user)
+    if registered_tg_user is not None and registered_tg_user != message.from_user.id:
+        await bot.delete_state(message.from_user.id, message.chat.id)
+        await bot.send_message(message.chat.id, "К данному логину привязан другой пользователь telegram!")
+        return
+
     await bot.send_message(message.chat.id, "Введите пароль или API-ключ:")
     await bot.set_state(message.from_user.id, f"jira_pass_{jira_user}", message.chat.id)
 
@@ -32,6 +40,7 @@ async def get_jira_pass(message: Message, jira_user: str):
     else:
         with Database() as db:
             db.set_user(message.from_user.id, message.from_user.username, jira_user, jira_pass)
+            db.register_user(message.from_user.id, message.from_user.username, jira_user)
         await bot.send_message(message.chat.id, "Вы успешно авторизованы!")
 
 
