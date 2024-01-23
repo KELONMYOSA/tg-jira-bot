@@ -29,7 +29,12 @@ def run(bot: AsyncTeleBot):
                 output_datetime = input_datetime.strftime("%d.%m в %H:%M")
                 text_to_add = f"{output_datetime} - {comment.author.displayName} ({comment.author.name}):\n"
                 text_to_add += comment.body + "\n\n"
-                if len(message_text) + len(text_to_add) < 4000:
+                if len(text_to_add) > 4000:
+                    cut = 4000 - len(message_text)
+                    message_text += text_to_add[:cut]
+                    await bot.send_message(call.message.chat.id, message_text, disable_web_page_preview=True)
+                    message_text = text_to_add[cut:]
+                elif len(message_text) + len(text_to_add) < 4000:
                     message_text += text_to_add
                 else:
                     await bot.send_message(call.message.chat.id, message_text, disable_web_page_preview=True)
