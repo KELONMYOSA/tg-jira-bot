@@ -1,5 +1,4 @@
 from telebot.async_telebot import AsyncTeleBot
-from telebot.formatting import hlink
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from src.bot.app import bot
@@ -37,7 +36,7 @@ async def search_issues_key(message: Message):
             await bot.send_message(
                 message.chat.id,
                 f"""
-Ключ: {hlink(issue.key, 'https://jira.comfortel.pro/browse/' + issue.key)}
+Ключ: [{issue.key}]({'https://jira.comfortel.pro/browse/' + issue.key})
 Название: {issue.fields.summary}
 Исполнитель: {issue.fields.assignee.displayName}
 Статус: {issue.fields.status.name}
@@ -45,5 +44,5 @@ async def search_issues_key(message: Message):
 Описание: {issue.fields.description}
                 """,
                 reply_markup=keyboard,
-                parse_mode="HTML",
+                parse_mode="Markdown",
             )

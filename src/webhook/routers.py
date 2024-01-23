@@ -2,7 +2,6 @@ import re
 from datetime import datetime
 
 from fastapi import APIRouter, Request
-from telebot.formatting import hlink
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from src.bot.app import bot
@@ -24,7 +23,7 @@ async def webhook(request: Request):
 
     message_header = None
     message_body = f"""
-Ключ: {hlink(key, 'https://jira.comfortel.pro/browse/' + key)}
+Ключ: [{key}]({'https://jira.comfortel.pro/browse/' + key})
 Название: {summary}
 Статус: {status}
 Приоритет: {priority}
@@ -64,12 +63,12 @@ async def webhook(request: Request):
             if r["issue_event_type_name"] == "issue_commented":
                 message_header = (
                     f"Вы были упомянуты в комментарии к задаче "
-                    f"{hlink(key, 'https://jira.comfortel.pro/browse/' + key)}:\n"
+                    f"[{key}]({'https://jira.comfortel.pro/browse/' + key}):\n"
                 )
             elif r["issue_event_type_name"] == "issue_comment_edited":
                 message_header = (
                     f"Был изменен комментарий к задаче "
-                    f"{hlink(key, 'https://jira.comfortel.pro/browse/' + key)} с Вашим упоминанием:\n"
+                    f"[{key}]({'https://jira.comfortel.pro/browse/' + key}) с Вашим упоминанием:\n"
                 )
 
     if message_header is not None:
