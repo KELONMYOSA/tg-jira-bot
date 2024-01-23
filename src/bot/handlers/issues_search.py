@@ -46,4 +46,5 @@ async def search_issues_key(message: Message):
                 """,
                 reply_markup=keyboard,
                 entities=[hlink],
+                disable_web_page_preview=True
             )

@@ -66,6 +66,7 @@ def run(bot: AsyncTeleBot):
                 """,
             reply_markup=keyboard,
             entities=[hlink],
+            disable_web_page_preview=True
         )
 
 

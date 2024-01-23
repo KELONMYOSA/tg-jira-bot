@@ -32,13 +32,13 @@ def run(bot: AsyncTeleBot):
                 if len(message_text) + len(text_to_add) < 4000:
                     message_text += text_to_add
                 else:
-                    await bot.send_message(call.message.chat.id, message_text)
+                    await bot.send_message(call.message.chat.id, message_text, disable_web_page_preview=True)
                     message_text = text_to_add
 
         keyboard = InlineKeyboardMarkup()
         new_comment_button = InlineKeyboardButton("Написать", callback_data=f"comments_issue_new_{issue_key}")
         keyboard.add(new_comment_button)
-        await bot.send_message(call.message.chat.id, message_text, reply_markup=keyboard)
+        await bot.send_message(call.message.chat.id, message_text, reply_markup=keyboard, disable_web_page_preview=True)
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("comments_issue_new_"))
     async def comments_issue_new(call: CallbackQuery):
