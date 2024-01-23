@@ -27,8 +27,13 @@ def run(bot: AsyncTeleBot):
             for comment in comments:
                 input_datetime = datetime.strptime(comment.created, "%Y-%m-%dT%H:%M:%S.%f%z")
                 output_datetime = input_datetime.strftime("%d.%m в %H:%M")
-                message_text += f"{output_datetime} - {comment.author.displayName} ({comment.author.name}):\n"
-                message_text += comment.body + "\n\n"
+                text_to_add = f"{output_datetime} - {comment.author.displayName} ({comment.author.name}):\n"
+                text_to_add += comment.body + "\n\n"
+                if len(message_text) + len(text_to_add) < 4000:
+                    message_text += text_to_add
+                else:
+                    await bot.send_message(call.message.chat.id, message_text)
+                    message_text = text_to_add
 
         keyboard = InlineKeyboardMarkup()
         new_comment_button = InlineKeyboardButton("Написать", callback_data=f"comments_issue_new_{issue_key}")

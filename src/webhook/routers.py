@@ -45,7 +45,7 @@ async def webhook(request: Request):
             message_header = "Был изменен статус задачи с Вашим участием:"
         elif r["issue_event_type_name"] == "issue_assigned":
             message_header = "Вы были назначены исполнителем задачи:"
-        else:
+        elif "comment" in r:
             comment = r["comment"]
             comment_text = comment["body"]
 
