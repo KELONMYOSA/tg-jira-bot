@@ -39,23 +39,23 @@ async def webhook(request: Request):
     if r["webhookEvent"] == "jira:issue_created":
         message_header = "Была создана новая задача с Вашим участием:"
         hlink = MessageEntity(
-            "text_link", len(message_header) + 7, len(key), f"https://jira.comfortel.pro/browse/{key}"
+            "text_link", len(message_header) + 8, len(key), f"https://jira.comfortel.pro/browse/{key}"
         )
     elif r["webhookEvent"] == "jira:issue_updated":
         if r["issue_event_type_name"] == "issue_updated":
             message_header = "Была обновлена задача с Вашим участием:"
             hlink = MessageEntity(
-                "text_link", len(message_header) + 7, len(key), f"https://jira.comfortel.pro/browse/{key}"
+                "text_link", len(message_header) + 8, len(key), f"https://jira.comfortel.pro/browse/{key}"
             )
         elif r["issue_event_type_name"] == "issue_generic":
             message_header = "Был изменен статус задачи с Вашим участием:"
             hlink = MessageEntity(
-                "text_link", len(message_header) + 7, len(key), f"https://jira.comfortel.pro/browse/{key}"
+                "text_link", len(message_header) + 8, len(key), f"https://jira.comfortel.pro/browse/{key}"
             )
         elif r["issue_event_type_name"] == "issue_assigned":
             message_header = "Вы были назначены исполнителем задачи:"
             hlink = MessageEntity(
-                "text_link", len(message_header) + 7, len(key), f"https://jira.comfortel.pro/browse/{key}"
+                "text_link", len(message_header) + 8, len(key), f"https://jira.comfortel.pro/browse/{key}"
             )
         elif "comment" in r:
             comment = r["comment"]

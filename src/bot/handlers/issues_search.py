@@ -33,7 +33,7 @@ async def search_issues_key(message: Message):
                 "Вложения", callback_data=f"attachments_issue_get_{issue.key}"
             )
             keyboard.add(edit_issue_button, comments_issue_button, attachments_issue_button)
-            hlink = MessageEntity("text_link", 6, len(issue.key), f"https://jira.comfortel.pro/browse/{issue.key}")
+            hlink = MessageEntity("text_link", 7, len(issue.key), f"https://jira.comfortel.pro/browse/{issue.key}")
             await bot.send_message(
                 message.chat.id,
                 f"""
