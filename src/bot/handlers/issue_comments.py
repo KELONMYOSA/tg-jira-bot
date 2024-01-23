@@ -19,11 +19,17 @@ def run(bot: AsyncTeleBot):
 
         issue_key = call.data.replace("comments_issue_get_", "")
         comments = jira.comments(issue_key)
+        all_button = False
 
         if not comments:
             message_text = f"Комментарии к задаче {issue_key} отсутствуют"
         else:
-            message_text = f"Комментарии к задаче {issue_key}:\n\n"
+            if len(comments) > 3:
+                message_text = f"Последние комментарии к задаче {issue_key}:\n\n"
+                comments = comments[-3:]
+                all_button = True
+            else:
+                message_text = f"Комментарии к задаче {issue_key}:\n\n"
             for comment in comments:
                 input_datetime = datetime.strptime(comment.created, "%Y-%m-%dT%H:%M:%S.%f%z")
                 output_datetime = input_datetime.strftime("%d.%m в %H:%M")
@@ -39,6 +45,45 @@ def run(bot: AsyncTeleBot):
                 else:
                     await bot.send_message(call.message.chat.id, message_text, disable_web_page_preview=True)
                     message_text = text_to_add
+
+        keyboard = InlineKeyboardMarkup()
+        new_comment_button = InlineKeyboardButton("Написать", callback_data=f"comments_issue_new_{issue_key}")
+        if all_button:
+            all_comments_button = InlineKeyboardButton("Показать все", callback_data=f"comments_issue_all_{issue_key}")
+            keyboard.add(all_comments_button, new_comment_button)
+        else:
+            keyboard.add(new_comment_button)
+        await bot.send_message(call.message.chat.id, message_text, reply_markup=keyboard, disable_web_page_preview=True)
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("comments_issue_all_"))
+    async def comments_issue_all(call: CallbackQuery):
+        await bot.answer_callback_query(call.id)
+        await bot.delete_message(call.message.chat.id, call.message.id)
+
+        credentials = await get_credentials(call.message.chat.id)
+        if credentials is None:
+            return
+        jira = jira_auth(*credentials)
+
+        issue_key = call.data.replace("comments_issue_all_", "")
+        comments = jira.comments(issue_key)
+
+        message_text = f"Комментарии к задаче {issue_key}:\n\n"
+        for comment in comments:
+            input_datetime = datetime.strptime(comment.created, "%Y-%m-%dT%H:%M:%S.%f%z")
+            output_datetime = input_datetime.strftime("%d.%m в %H:%M")
+            text_to_add = f"{output_datetime} - {comment.author.displayName} ({comment.author.name}):\n"
+            text_to_add += comment.body + "\n\n"
+            if len(text_to_add) > 4000:
+                cut = 4000 - len(message_text)
+                message_text += text_to_add[:cut]
+                await bot.send_message(call.message.chat.id, message_text, disable_web_page_preview=True)
+                message_text = text_to_add[cut:]
+            elif len(message_text) + len(text_to_add) < 4000:
+                message_text += text_to_add
+            else:
+                await bot.send_message(call.message.chat.id, message_text, disable_web_page_preview=True)
+                message_text = text_to_add
 
         keyboard = InlineKeyboardMarkup()
         new_comment_button = InlineKeyboardButton("Написать", callback_data=f"comments_issue_new_{issue_key}")
