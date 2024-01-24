@@ -70,8 +70,13 @@ async def webhook(request: Request):
             message_body += comment_text
 
             keyboard = InlineKeyboardMarkup()
+            reply_comment_button = InlineKeyboardButton(
+                "Ответить", callback_data=f"comments_issue_reply_{key}_|_{comment['author']['name']}"
+            )
             new_comment_button = InlineKeyboardButton("Написать", callback_data=f"comments_issue_new_{key}")
-            keyboard.add(new_comment_button)
+            all_comment_button = InlineKeyboardButton("Все комментарии", callback_data=f"comments_issue_all_{key}_|_no")
+            keyboard.add(reply_comment_button, new_comment_button)
+            keyboard.add(all_comment_button)
 
             if r["issue_event_type_name"] == "issue_commented":
                 message_header = f"Вы были упомянуты в комментарии к задаче {key}:\n"

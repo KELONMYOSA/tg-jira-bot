@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 from telebot.async_telebot import AsyncTeleBot
@@ -49,7 +50,9 @@ def run(bot: AsyncTeleBot):
         keyboard = InlineKeyboardMarkup()
         new_comment_button = InlineKeyboardButton("Написать", callback_data=f"comments_issue_new_{issue_key}")
         if all_button:
-            all_comments_button = InlineKeyboardButton("Показать все", callback_data=f"comments_issue_all_{issue_key}")
+            all_comments_button = InlineKeyboardButton(
+                "Показать все", callback_data=f"comments_issue_all_{issue_key}_|_yes"
+            )
             keyboard.add(all_comments_button, new_comment_button)
         else:
             keyboard.add(new_comment_button)
@@ -58,14 +61,17 @@ def run(bot: AsyncTeleBot):
     @bot.callback_query_handler(func=lambda call: call.data.startswith("comments_issue_all_"))
     async def comments_issue_all(call: CallbackQuery):
         await bot.answer_callback_query(call.id)
-        await bot.delete_message(call.message.chat.id, call.message.id)
+
+        issue_key, delete = call.data.replace("comments_issue_all_", "").split("_|_")
+
+        if delete == "yes":
+            await bot.delete_message(call.message.chat.id, call.message.id)
 
         credentials = await get_credentials(call.message.chat.id)
         if credentials is None:
             return
         jira = jira_auth(*credentials)
 
-        issue_key = call.data.replace("comments_issue_all_", "")
         comments = jira.comments(issue_key)
 
         message_text = f"Комментарии к задаче {issue_key}:\n\n"
@@ -93,11 +99,14 @@ def run(bot: AsyncTeleBot):
     @bot.callback_query_handler(func=lambda call: call.data.startswith("comments_issue_new_"))
     async def comments_issue_new(call: CallbackQuery):
         await bot.answer_callback_query(call.id)
-
-        issue_key = call.data.replace("comments_issue_new_", "")
-
         await bot.send_message(call.message.chat.id, "Введите текст комментария:")
-        await bot.set_state(call.message.chat.id, f"comments_issue_new_{issue_key}", call.message.chat.id)
+        await bot.set_state(call.message.chat.id, call.data, call.message.chat.id)
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("comments_issue_reply_"))
+    async def comments_issue_reply(call: CallbackQuery):
+        await bot.answer_callback_query(call.id)
+        await bot.send_message(call.message.chat.id, "Введите текст комментария:")
+        await bot.set_state(call.message.chat.id, call.data, call.message.chat.id)
 
 
 async def comments_issue_new_text(message: Message, issue_key: str):
@@ -113,11 +122,34 @@ async def comments_issue_new_text(message: Message, issue_key: str):
     await bot.send_message(message.chat.id, f"Комментарий к задаче {issue_key} был добавлен")
 
 
-async def comments_issue_reply(chat_id: int, issue_key: str, comment_text: str):
-    credentials = await get_credentials(chat_id)
+async def comments_issue_reply_text(message: Message, issue_key: str, username: str):
+    reply_text = f"[~{username}]\n{message.text.strip()}"
+
+    credentials = await get_credentials(message.from_user.id)
     if credentials is None:
         return
     jira = jira_auth(*credentials)
-    jira.add_comment(issue_key, comment_text)
+    jira.add_comment(issue_key, reply_text)
 
-    await bot.send_message(chat_id, f"Ответ на комментарий к задаче {issue_key} был добавлен")
+    await bot.delete_state(message.from_user.id, message.chat.id)
+    await bot.send_message(message.chat.id, f"Ответ на комментарий к задаче {issue_key} был добавлен")
+
+
+async def comments_reply(chat_id: int, bot_text: str, user_text: str):
+    issue_pattern = re.compile(r"задаче (\w+-\d+)")
+    username_pattern = re.compile(r"\((\w+)\):")
+    issue_match = issue_pattern.search(bot_text)
+    username_match = username_pattern.search(bot_text)
+    issue_key = issue_match.group(1) if issue_match else None
+    username = username_match.group(1) if username_match else None
+
+    if issue_key and username:
+        reply_text = f"[~{username}]\n{user_text}"
+
+        credentials = await get_credentials(chat_id)
+        if credentials is None:
+            return
+        jira = jira_auth(*credentials)
+        jira.add_comment(issue_key, reply_text)
+
+        await bot.send_message(chat_id, f"Ответ на комментарий к задаче {issue_key} был добавлен")

@@ -1,10 +1,8 @@
-import re
-
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
 from src.bot.handlers.issue_attachments import attachments_issue_new_file
-from src.bot.handlers.issue_comments import comments_issue_new_text, comments_issue_reply
+from src.bot.handlers.issue_comments import comments_issue_new_text, comments_issue_reply_text, comments_reply
 from src.bot.handlers.issue_create import (
     create_issue_confirm,
     create_issue_description,
@@ -33,16 +31,7 @@ def run(bot: AsyncTeleBot):
                 elif reply_message.text.startswith(
                     "Вы были упомянуты в комментарии к задаче"
                 ) or reply_message.text.startswith("Был изменен комментарий к задаче"):
-                    issue_pattern = re.compile(r"задаче (\w+-\d+)")
-                    username_pattern = re.compile(r"\((\w+)\):")
-                    issue_match = issue_pattern.search(reply_message.text)
-                    username_match = username_pattern.search(reply_message.text)
-                    issue_key = issue_match.group(1) if issue_match else None
-                    username = username_match.group(1) if username_match else None
-
-                    if issue_key and username:
-                        comment_text = f"[~{username}]\n{message.text}"
-                        await comments_issue_reply(message.chat.id, issue_key, comment_text)
+                    await comments_reply(message.chat.id, reply_message.text, message.text)
                 else:
                     await bot.delete_message(message.chat.id, message.message_id)
             return
@@ -74,6 +63,10 @@ def run(bot: AsyncTeleBot):
         elif user_state.startswith("comments_issue_new_"):
             issue_key = user_state.replace("comments_issue_new_", "")
             await comments_issue_new_text(message, issue_key)
+        # Получение текста для ответа на комментарий
+        elif user_state.startswith("comments_issue_reply_"):
+            data = user_state.replace("comments_issue_reply_", "").split("_|_")
+            await comments_issue_reply_text(message, *data)
         # Получение файл для отправки вложения
         elif user_state.startswith("attachments_issue_new_"):
             issue_key = user_state.replace("attachments_issue_new_", "")
