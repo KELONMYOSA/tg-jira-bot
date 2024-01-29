@@ -95,6 +95,10 @@ async def webhook(request: Request):
                     await bot.send_message(
                         tg_user[0], message_header + "\n" + message_body, reply_markup=keyboard, entities=[hlink]
                     )
+                    print(
+                        f"Notification has been sent to {tg_user[1]}. "
+                        f"WebhookEvent - {r['webhookEvent']}, IssueKey - {key}"
+                    )
                 except:
                     print(f"Unable to send a message to {tg_user[1]}")
 
