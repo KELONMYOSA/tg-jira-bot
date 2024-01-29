@@ -74,6 +74,12 @@ class Database:
         tg_user_data = self.cur.fetchall()
         return tg_user_data
 
+    # Получение данных пользователей
+    def get_users_info(self) -> list:
+        self.cur.execute("SELECT tg_user_id, tg_username, jira_login FROM user_credentials")
+        tg_user_data = self.cur.fetchall()
+        return tg_user_data
+
     # Удаление данных пользователя
     def remove_user(self, user_id: int):
         self.cur.execute("DELETE FROM user_credentials WHERE tg_user_id = ?", (user_id,))
