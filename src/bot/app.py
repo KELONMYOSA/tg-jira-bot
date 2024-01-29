@@ -1,6 +1,8 @@
+import asyncio
 import importlib
 import pkgutil
 
+from telebot.apihelper import ApiTelegramException
 from telebot.async_telebot import AsyncTeleBot
 
 from src.bot import handlers
@@ -21,4 +23,12 @@ def init_bot():
 async def start_bot():
     print("The telegram bot has started!")
     while True:
-        await bot.polling()
+        try:
+            await bot.polling()
+        except ApiTelegramException as e:
+            if e.error_code == 429:
+                print(f"Received error 429: {e}")
+                await asyncio.sleep(5)
+            else:
+                print(f"Unhandled exception: {e}")
+                await asyncio.sleep(1)
