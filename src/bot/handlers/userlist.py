@@ -16,10 +16,12 @@ def run(bot: AsyncTeleBot):
 
         rows = []
         for user in users:
-            rows.append(f"{user[0]} {user[1]} {user[2]}")
+            rows.append(f"{user[0]}   {user[1]}   {user[2]}")
 
-        text = "tg_user_id | tg_username | jira_login\n"
-        text += "_____________________________________\n"
+        text = "tg_user_id  |  tg_username  |  jira_login\n"
+        text += "_________________________________________\n"
         text += str.join("\n", rows)
+        text += "\n_________________________________________\n"
+        text += f"Total users: {len(users)}"
 
         await bot.send_message(message.chat.id, text)
