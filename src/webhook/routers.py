@@ -6,6 +6,7 @@ from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, MessageEnt
 
 from src.bot.app import bot
 from src.db.dao import Database
+from src.webhook.utils import jira_build_msk_users
 
 router = APIRouter()
 
@@ -37,7 +38,11 @@ async def webhook(request: Request):
     keyboard.add(edit_issue_button, comments_issue_button, attachments_issue_button)
 
     if r["webhookEvent"] == "jira:issue_created":
-        message_header = "Была создана новая задача с Вашим участием:"
+        if assignees[0] == "jira_build_msk":
+            assignees = jira_build_msk_users
+            message_header = "Была создана новая задача для Строители МСК (очередь):"
+        else:
+            message_header = "Была создана новая задача с Вашим участием:"
         hlink = MessageEntity(
             "text_link", len(message_header) + 8, len(key), f"https://jira.comfortel.pro/browse/{key}"
         )
