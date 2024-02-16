@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, MessageEntity
 
 from src.bot.app import bot
@@ -108,3 +108,12 @@ async def webhook(request: Request):
                     print(f"Unable to send a message to {tg_user[1]}")
 
     return {"status": "success"}
+
+
+@router.get("/bot/health")
+async def health_check():
+    try:
+        bot_info = await bot.get_me()
+        return {"status": "ok", "bot": bot_info.username}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=str(e))
