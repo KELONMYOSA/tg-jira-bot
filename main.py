@@ -2,7 +2,7 @@ import asyncio
 
 import uvicorn
 
-from src.bot.app import init_bot, start_bot
+from src.bot.app import start_bot
 from src.webhook.app import app
 
 
@@ -15,7 +15,6 @@ def start_uvicorn(loop):
 
 
 def start_tg_bot(loop):
-    init_bot()
     loop.create_task(start_bot())
 
 

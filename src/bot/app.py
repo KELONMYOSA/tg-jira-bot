@@ -24,6 +24,7 @@ async def start_bot():
     print("The telegram bot has started!")
     while True:
         try:
+            init_bot()
             await bot.polling()
         except ApiTelegramException as e:
             if e.error_code == 429:
