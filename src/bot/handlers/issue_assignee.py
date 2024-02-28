@@ -1,7 +1,7 @@
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
-from src.bot.utils.dict import executor_name2displayName
+from src.bot.utils.dict import build_name2displayName, executor_name2displayName
 from src.bot.utils.jira_auth import get_credentials, jira_auth
 
 
@@ -43,6 +43,19 @@ def run(bot: AsyncTeleBot):
         jira = jira_auth(*credentials)
 
         issue_key, assignee = call.data.replace("assignee_issue_change_", "").split("_|_")
+
+        if assignee == "build":
+            keyboard_buttons = []
+            for name in build_name2displayName:
+                keyboard_buttons.append(
+                    InlineKeyboardButton(
+                        build_name2displayName[name], callback_data=f"assignee_issue_change_{issue_key}_|_{name}"
+                    )
+                )
+            keyboard = InlineKeyboardMarkup(row_width=1).add(*keyboard_buttons)
+            await bot.edit_message_reply_markup(call.message.chat.id, call.message.id, reply_markup=keyboard)
+            return
+
         issue = jira.issue(issue_key)
         issue.update(assignee={"name": assignee})
 

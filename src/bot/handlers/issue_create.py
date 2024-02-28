@@ -2,7 +2,7 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from src.bot.app import bot
-from src.bot.utils.dict import executor_name2displayName, priority2text
+from src.bot.utils.dict import build_name2displayName, executor_name2displayName, priority2text
 from src.bot.utils.jira_auth import get_credentials, jira_auth
 
 
@@ -49,7 +49,21 @@ def run(bot: AsyncTeleBot):
         await bot.delete_message(call.message.chat.id, call.message.id)
 
         project_key, executor = call.data.replace("create_issue_executor_", "").split("_|_")
-        await bot.send_message(call.message.chat.id, f"Исполнитель - {executor_name2displayName[executor]}")
+
+        if executor == "build":
+            keyboard_buttons = []
+            for name in build_name2displayName:
+                keyboard_buttons.append(
+                    InlineKeyboardButton(
+                        build_name2displayName[name], callback_data=f"create_issue_executor_{project_key}_|_{name}"
+                    )
+                )
+            keyboard = InlineKeyboardMarkup(row_width=1).add(*keyboard_buttons)
+            await bot.edit_message_reply_markup(call.message.chat.id, call.message.id, reply_markup=keyboard)
+            return
+
+        name2display_name = executor_name2displayName | build_name2displayName
+        await bot.send_message(call.message.chat.id, f"Исполнитель - {name2display_name[executor]}")
         await bot.send_message(call.message.chat.id, "Введите название задачи:")
         await bot.set_state(
             call.message.chat.id, f"create_issue_summary_{project_key}_|_{executor}", call.message.chat.id
@@ -80,11 +94,12 @@ async def create_issue_priority(message: Message, project_key: str, executor: st
 async def create_issue_description(message: Message, project_key: str, executor: str, summary: str, priority: str):
     priority_text = priority2text[priority]
     description = message.text.strip()
+    name2display_name = executor_name2displayName | build_name2displayName
     await bot.send_message(
         message.chat.id,
         f"""
 Проект: {project_key}
-Исполнитель: {executor_name2displayName[executor]}
+Исполнитель: {name2display_name[executor]}
 Название: {summary}
 Приоритет: {priority_text}
 Описание: {description}
