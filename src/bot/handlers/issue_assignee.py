@@ -35,7 +35,6 @@ def run(bot: AsyncTeleBot):
     @bot.callback_query_handler(func=lambda call: call.data.startswith("assignee_issue_change_"))
     async def assignee_issue_change(call: CallbackQuery):
         await bot.answer_callback_query(call.id)
-        await bot.delete_message(call.message.chat.id, call.message.id)
 
         credentials = await get_credentials(call.message.chat.id)
         if credentials is None:
@@ -55,6 +54,8 @@ def run(bot: AsyncTeleBot):
             keyboard = InlineKeyboardMarkup(row_width=1).add(*keyboard_buttons)
             await bot.edit_message_reply_markup(call.message.chat.id, call.message.id, reply_markup=keyboard)
             return
+
+        await bot.delete_message(call.message.chat.id, call.message.id)
 
         issue = jira.issue(issue_key)
         issue.update(assignee={"name": assignee})

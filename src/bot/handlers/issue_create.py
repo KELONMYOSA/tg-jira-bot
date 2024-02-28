@@ -46,7 +46,6 @@ def run(bot: AsyncTeleBot):
     @bot.callback_query_handler(func=lambda call: call.data.startswith("create_issue_executor_"))
     async def create_issue_executor(call: CallbackQuery):
         await bot.answer_callback_query(call.id)
-        await bot.delete_message(call.message.chat.id, call.message.id)
 
         project_key, executor = call.data.replace("create_issue_executor_", "").split("_|_")
 
@@ -61,6 +60,8 @@ def run(bot: AsyncTeleBot):
             keyboard = InlineKeyboardMarkup(row_width=1).add(*keyboard_buttons)
             await bot.edit_message_reply_markup(call.message.chat.id, call.message.id, reply_markup=keyboard)
             return
+
+        await bot.delete_message(call.message.chat.id, call.message.id)
 
         name2display_name = executor_name2displayName | build_name2displayName
         await bot.send_message(call.message.chat.id, f"Исполнитель - {name2display_name[executor]}")
