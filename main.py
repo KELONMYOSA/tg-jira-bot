@@ -11,15 +11,11 @@ def start_uvicorn(loop):
     port = 5555
     config = uvicorn.Config(app, host=host, port=port, loop=loop)
     server = uvicorn.Server(config)
-    loop.run_until_complete(server.serve())
-
-
-def start_tg_bot(loop):
-    loop.create_task(start_bot())
+    loop.create_task(server.serve())
 
 
 if __name__ == "__main__":
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    start_tg_bot(loop)
     start_uvicorn(loop)
+    start_bot(loop)
